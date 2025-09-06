@@ -1,0 +1,49 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0-windows10.0.19041.0</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Version>1.0.0</Version>
+    <Authors>Megria</Authors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="NAudio">
+      <HintPath>C:\Users\Megria\UserProgram\ゆっくりMovieMaker4\YukkuriMovieMaker_v4\NAudio.dll</HintPath>
+    </Reference>
+    <Reference Include="NAudio.Asio">
+      <HintPath>C:\Users\Megria\UserProgram\ゆっくりMovieMaker4\YukkuriMovieMaker_v4\NAudio.Asio.dll</HintPath>
+    </Reference>
+    <Reference Include="NAudio.Core">
+      <HintPath>C:\Users\Megria\UserProgram\ゆっくりMovieMaker4\YukkuriMovieMaker_v4\NAudio.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="NAudio.Midi">
+      <HintPath>C:\Users\Megria\UserProgram\ゆっくりMovieMaker4\YukkuriMovieMaker_v4\NAudio.Midi.dll</HintPath>
+    </Reference>
+    <Reference Include="NAudio.Wasapi">
+      <HintPath>C:\Users\Megria\UserProgram\ゆっくりMovieMaker4\YukkuriMovieMaker_v4\NAudio.Wasapi.dll</HintPath>
+    </Reference>
+    <Reference Include="NAudio.WinForms">
+      <HintPath>C:\Users\Megria\UserProgram\ゆっくりMovieMaker4\YukkuriMovieMaker_v4\NAudio.WinForms.dll</HintPath>
+    </Reference>
+    <Reference Include="NAudio.WinMM">
+      <HintPath>C:\Users\Megria\UserProgram\ゆっくりMovieMaker4\YukkuriMovieMaker_v4\NAudio.WinMM.dll</HintPath>
+    </Reference>
+    <Reference Include="PresentationCore">
+      <HintPath>C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\9.0.0\PresentationCore.dll</HintPath>
+    </Reference>
+    <Reference Include="Vortice.Direct2D1">
+      <HintPath>C:\Users\Megria\UserProgram\ゆっくりMovieMaker4\YukkuriMovieMaker_v4\Vortice.Direct2D1.dll</HintPath>
+    </Reference>
+    <Reference Include="YukkuriMovieMaker.Controls">
+      <HintPath>C:\Users\Megria\UserProgram\ゆっくりMovieMaker4\YukkuriMovieMaker_v4\YukkuriMovieMaker.Controls.dll</HintPath>
+    </Reference>
+    <Reference Include="YukkuriMovieMaker.Plugin">
+      <HintPath>C:\Users\Megria\UserProgram\ゆっくりMovieMaker4\YukkuriMovieMaker_v4\YukkuriMovieMaker.Plugin.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>
