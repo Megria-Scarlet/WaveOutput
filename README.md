@@ -1,36 +1,56 @@
-# **WaveOutput** Ver.1.0
+# **WaveOutput** Ver.1.1
 
 制作: Megria  
-GitHub: https://github.com/Megria-Scarlet/WaveOutput  
+GitHub: <https://github.com/Megria-Scarlet/WaveOutput>  
 
 ## 概要
 
-YMM4 の動画出力の項目に [WAV 出力] を追加する YMM4 向けのプラグインです。  
-[連番 PNG + WAV 出力] とは異なり、 WAV の出力形式をある程度決められます。
+YMM4 の動画出力の項目に [**WAV 出力**] を追加する YMM4 向けのプラグインです。  
+[**連番 PNG + WAV 出力**] とは異なり、 WAV の出力形式をある程度決められます。
 
-### 現段階の出力可能形式
+## 出力フォーマット
 
-* 41.1 kHz 16 bit モノラル
-* 41.1 kHz 16 bit ステレオ
-* 41.1 kHz 24 bit モノラル
-* 41.1 kHz 24 bit ステレオ
-* 41.1 kHz Float モノラル
-* 41.1 kHz Float ステレオ
-* 44 kHz 16 bit モノラル
-* 44 kHz 16 bit ステレオ
-* 44 kHz 24 bit モノラル
-* 44 kHz 24 bit ステレオ
-* 44 kHz Float モノラル
-* 44 kHz Float ステレオ
+### サンプリング数
+
+ver.1.1 以降では出力サンプリング数を .json ファイルで編集できるようになりました。  
+"WaveOutput.dll" と同じ位置("plugin" フォルダー直下の場合は "WaveOutput" フォルダー下)にある "SamplePreset.json" ファイルを読み取ります。  
+ファイルが存在しない場合は自動生成されます。
+
+:::note info
+インフォメーション
+.json ファイルの読み取り時にエラーが発生した場合は既定値を読み取ります。
+:::
+
+### ビット数
+
+* 16 bit
+* 24 bit
+* 32 bit (Float)
+
+### チャンネル数
+
+* モノラル (1 ch)
+* ステレオ (2 ch)
 
 ## サポート
 
+:::note warn
+警告  
 **このプラグインを使用して発生した損害について、制作者はいっさい保証しません。**  
-不具合などの連絡は [Twitter(現:X)](https://x.com/Megria1201) にてお願いします。  
+:::
+
+不具合・ご要望などの連絡は [Twitter(現:X)](https://x.com/Megria1201) にてお願いします。  
 ※対応できないことの方が多いと思います。  
 
 ## 更新履歴
 
-* ver.1.0
+* ver.1.0 (2025/09/07)
 
-    公開
+  * 公開
+
+* ver.1.1 (2025/09/07)
+
+  * エンコード設定の初期項目の値を変更
+  * エンコード設定の UI を調整
+  * Readme ファイルの内容を修正
+  * サンプリング数のプリセットに対応
