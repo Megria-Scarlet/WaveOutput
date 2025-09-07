@@ -108,10 +108,12 @@ namespace MegriaCore.YMM4.WaveOutput
             if (fileWriter is not null)
             {
                 var tmpFormat = fileWriter.WaveFormat;
-                int hertz = outputOption.Hertz;
+                int hertz;
                 int bits;
                 int channel;
                 {
+                    var sample = outputOption.Samples.ElementAtOrDefault(outputOption.SampleIndex);
+                    hertz = sample is null ? 44100 : Math.Max(sample.Sample, 8000);
                     var bitsAndChannel = outputOption.BitsAndChannel!;
                     bits = bitsAndChannel.Bits;
                     channel = bitsAndChannel.Channel;

@@ -12,6 +12,7 @@ namespace MegriaCore.YMM4.WaveOutput
 {
     public class WaveFileWriterPlugin : IVideoFileWriterPlugin
     {
+
         /// <summary>
         /// プラグインがサポートする出力パスの形式（ファイル or フォルダ or なし）
         /// </summary>

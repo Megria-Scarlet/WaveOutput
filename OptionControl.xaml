@@ -7,6 +7,24 @@
              mc:Ignorable="d"
              d:DesignHeight="100" d:DesignWidth="450"
              x:Name="root">
+    <UserControl.Resources>
+        <DataTemplate x:Key="ComboView">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="{Binding ActualLabel}"/>
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate x:Key="ComboSelector">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="{Binding ActualLabel}" Margin="0,0,5,0"/>
+                <TextBlock Text="{Binding Unit}">
+                    <TextBlock.Foreground>
+                        <SolidColorBrush Color="{DynamicResource {x:Static SystemColors.ControlDarkDarkColorKey}}"/>
+                    </TextBlock.Foreground>
+                </TextBlock>
+            </StackPanel>
+        </DataTemplate>
+    </UserControl.Resources>
     <UserControl.DataContext>
         <local:OutputOption/>
     </UserControl.DataContext>
@@ -15,9 +33,9 @@
             <StackPanel>
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*" MinWidth="180"/>
                         <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*" MinWidth="180"/>
                     </Grid.ColumnDefinitions>
                     <Grid Grid.Column="0">
                         <Grid.ColumnDefinitions>
@@ -28,11 +46,12 @@
                         <Label Grid.Column="0" Content="サンプル数" HorizontalAlignment="Center"/>
                         <!-- UserControlに「root」という名前を付けて、下でバインドするときに「ElementName=root」とすることを忘れないこと！ -->
                         <!--<TextBox Text="{Binding Hertz}" Grid.Column="1" VerticalContentAlignment="Center" HorizontalContentAlignment="Right"/>-->
-                        <ComboBox Grid.Column="1" Text="{Binding Hertz}" VerticalContentAlignment="Center">
-                            <ComboBoxItem Content="44100" IsSelected="True"/>
-                            <ComboBoxItem Content="48000"/>
+                        <ComboBox x:Name="sampleCombo" Grid.Column="1" ItemsSource="{Binding Samples}" SelectedIndex="{Binding SampleIndex}" VerticalContentAlignment="Center">
+                            <ComboBox.ItemTemplateSelector>
+                                <local:PersonTemplateSelector/>
+                            </ComboBox.ItemTemplateSelector>
                         </ComboBox>
-                        <Label Grid.Column="2" Content="Hz" HorizontalAlignment="Left"/>
+                        <Label Grid.Column="2" Content="{Binding ElementName=sampleCombo, Path=SelectedItem.Unit}" HorizontalAlignment="Left"/>
                     </Grid>
                     <Separator Grid.Column="1" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}"/>
                     <Grid Grid.Column="2">
@@ -44,9 +63,8 @@
                         <Label Grid.Column="0" Content="フォーマット"/>
                         <!-- UserControlに「root」という名前を付けて、下でバインドするときに「ElementName=root」とすることを忘れないこと！ -->
                         <!--<TextBox Text="{Binding Hertz}" Grid.Column="1" VerticalContentAlignment="Center" HorizontalContentAlignment="Right"/>-->
-                        <ComboBox Grid.Column="1" VerticalContentAlignment="Center" ItemsSource="{Binding BitsAndChannels}" DisplayMemberPath="Label" SelectedItem="{Binding BitsAndChannel}" SelectedIndex="2">
+                        <ComboBox Grid.Column="1" VerticalContentAlignment="Center" ItemsSource="{Binding BitsAndChannels}" DisplayMemberPath="Label" SelectedItem="{Binding BitsAndChannel}" SelectedIndex="1">
                         </ComboBox>
-                        <Label Grid.Column="2" Content="bit" HorizontalAlignment="Left"/>
                     </Grid>
                 </Grid>
             </StackPanel>

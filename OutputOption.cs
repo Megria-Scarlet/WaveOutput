@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace MegriaCore.YMM4.WaveOutput
 {
-    public class OutputOption : IEquatable<OutputOption>, INotifyPropertyChanged, IDisposable
+    public class OutputOption : INotifyPropertyChanged, IDisposable
     {
         private bool disposedValue;
         public bool IsDisposed
@@ -12,65 +12,44 @@ namespace MegriaCore.YMM4.WaveOutput
             get => disposedValue;
         }
 
-
-        private int hertz = 44100;
-        public int Hertz
+        private int sampleIndex = -1;
+        public int SampleIndex
         {
             get
             {
                 ObjectDisposedException.ThrowIf(disposedValue, this);
-                return hertz;
+                return sampleIndex;
             }
             set
             {
                 ObjectDisposedException.ThrowIf(disposedValue, this);
-                if (value != hertz)
+                if (value != sampleIndex)
                 {
-                    hertz = value;
-                    NotifyPropertyChanged(nameof(Hertz));
+                    sampleIndex = value;
+                    NotifyPropertyChanged(nameof(SampleIndex));
                 }
             }
         }
-        private int bits = 16;
-
-        public int Bits
+        private IEnumerable<SamplePresetValue> samples;
+        public IEnumerable<SamplePresetValue> Samples
         {
             get
             {
                 ObjectDisposedException.ThrowIf(disposedValue, this);
-                return bits;
+                return samples;
             }
-            set
+            internal set
             {
                 ObjectDisposedException.ThrowIf(disposedValue, this);
-                if (value != bits)
+                if (value != samples)
                 {
-                    bits = value;
-                    NotifyPropertyChanged(nameof(Bits));
+                    samples = value;
+                    NotifyPropertyChanged(nameof(Samples));
                 }
             }
         }
 
-        private int channel = 2;
-
-        public int Channel
-        {
-            get
-            {
-                ObjectDisposedException.ThrowIf(disposedValue, this);
-                return channel;
-            }
-            set
-            {
-                ObjectDisposedException.ThrowIf(disposedValue, this);
-                if (value != channel)
-                {
-                    channel = value;
-                    NotifyPropertyChanged(nameof(Channel));
-                }
-            }
-        }
-        private BitsAndChannel? bitsAndChannel = bitsAndChannels[2]; //new(16, 2);
+        private BitsAndChannel? bitsAndChannel = bitsAndChannels[1]; //new(16, 2);
 
         public BitsAndChannel? BitsAndChannel
         {
@@ -85,14 +64,6 @@ namespace MegriaCore.YMM4.WaveOutput
                 if (bitsAndChannel != value)
                 {
                     bitsAndChannel = value;
-                    NotifyPropertyChanged(nameof(Channel));
-                    if (value is not null)
-                    {
-                        channel = value.Channel;
-                        NotifyPropertyChanged(nameof(Channel));
-                        bits = value.Bits;
-                        NotifyPropertyChanged(nameof(Bits));
-                    }
                 }
             }
         }
@@ -106,7 +77,21 @@ namespace MegriaCore.YMM4.WaveOutput
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
-        public OutputOption() { }
+        public OutputOption()
+        {
+            var samplePreset = Resource.samplePreset;
+            samples = samplePreset.PresetValues;
+            sampleIndex = samplePreset.DefaultIndex;
+        }
+        public OutputOption(IEnumerable<SamplePresetValue> samples, int sampleIndex)
+        {
+            this.samples = samples;
+            this.sampleIndex = sampleIndex;
+        }
+        internal OutputOption(SamplePreset preset) : this(preset.PresetValues, preset.DefaultIndex)
+        {
+
+        }
 
         protected virtual void Dispose(bool disposing)
         {
@@ -138,15 +123,6 @@ namespace MegriaCore.YMM4.WaveOutput
             GC.SuppressFinalize(this);
         }
 
-        public bool Equals(OutputOption? other)
-        {
-            ObjectDisposedException.ThrowIf(disposedValue, this);
-            if (ReferenceEquals(this, other))
-                return true;
-            if (other is null || other.GetType() != typeof(OutputOption))
-                return false;
-            return other.bits == bits && other.hertz == hertz;
-        }
         /// <summary>
         /// 全ての <see cref="PropertyChanged"/> ハンドラーを削除します。
         /// </summary>
@@ -154,15 +130,6 @@ namespace MegriaCore.YMM4.WaveOutput
         protected void ClearPropertyChanged()
         {
             this.PropertyChanged = null;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override bool Equals(object? obj) => Equals(obj as OutputOption);
-
-        public override int GetHashCode()
-        {
-            ObjectDisposedException.ThrowIf(disposedValue, this);
-            return HashCode.Combine(hertz, bits);
         }
 
         private static readonly BitsAndChannel[] bitsAndChannels = [
@@ -173,6 +140,7 @@ namespace MegriaCore.YMM4.WaveOutput
             new BitsAndChannel(-1, 1),
             new BitsAndChannel(-1, 2),
             ];
+
         private static System.Collections.ObjectModel.ReadOnlyCollection<BitsAndChannel> bitsAndChannelsList = new(bitsAndChannels);
         public static System.Collections.ObjectModel.ReadOnlyCollection<BitsAndChannel> BitsAndChannels { get => bitsAndChannelsList; }
     }
