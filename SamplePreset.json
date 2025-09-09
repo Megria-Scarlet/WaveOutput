@@ -1,0 +1,30 @@
+{
+    "DefaultIndex": 3,
+    "PresetValues": [
+        {
+            "Sample": 8000,
+            "Unit": "Hz"
+        },
+        {
+            "Sample": 16000,
+            "Unit": "Hz"
+        },
+        {
+            "Sample": 32000,
+            "Unit": "Hz"
+        },
+        {
+            "Sample": 44100,
+            "Unit": "Hz"
+        },
+        {
+            "Sample": 48000,
+            "Unit": "Hz"
+        },
+        {
+            "Sample": 96000,
+            "Label" : "96",
+            "Unit": "kHz"
+        }
+    ]
+}
