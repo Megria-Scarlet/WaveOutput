@@ -1,0 +1,25 @@
+{
+    "DefaultSampleIndex": 3,
+    "Samples": [
+        {
+            "Sample": 8000,
+            "Unit": "Hz"
+        },
+        {
+            "Sample": 16000,
+            "Unit": "Hz"
+        },
+        {
+            "Sample": 32000,
+            "Unit": "Hz"
+        },
+        {
+            "Sample": 44100,
+            "Unit": "Hz"
+        },
+        {
+            "Sample": 48000,
+            "Unit": "Hz"
+        }
+    ]
+}

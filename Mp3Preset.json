@@ -1,0 +1,42 @@
+{
+    "DefaultSampleIndex": 3,
+    "Samples": [
+        {
+            "Sample": 8000,
+            "Unit": "Hz"
+        },
+        {
+            "Sample": 16000,
+            "Unit": "Hz"
+        },
+        {
+            "Sample": 32000,
+            "Unit": "Hz"
+        },
+        {
+            "Sample": 44100,
+            "Unit": "Hz"
+        },
+        {
+            "Sample": 48000,
+            "Label": "48",
+            "Unit": "kHz"
+        }
+    ],
+    "DefaultBitRateIndex": 2,
+    "BitRates": [
+        {
+            "BitRate": 96000,
+            "Label": "96 kbps"
+        },
+        {
+            "BitRate": 128000
+        },
+        {
+            "BitRate": 192000
+        },
+        {
+            "BitRate": 256000
+        }
+    ]
+}
