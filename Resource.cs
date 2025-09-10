@@ -18,11 +18,20 @@ namespace MegriaCore.YMM4.WaveOutput
         /// <summary>
         /// サンプリングプリセットファイルのパス
         /// </summary>
-        internal static string samplePresetFilePath;
+        internal static string wavePresetFilePath;
         /// <summary>
         /// サンプリングプリセット
         /// </summary>
-        internal static SamplePreset samplePreset;
+        internal static SamplePreset waveSamplePreset;
+
+        /// <summary>
+        /// サンプリングプリセットファイルのパス
+        /// </summary>
+        internal static string mp3PresetFilePath;
+        /// <summary>
+        /// サンプリングプリセット
+        /// </summary>
+        internal static Mp3SamplePreset mp3SamplePreset;
 
         /// <summary>
         /// 既定の Json シリアライズオプション
@@ -39,7 +48,8 @@ namespace MegriaCore.YMM4.WaveOutput
 
             #region string 定数
             const string pluginDirectoryName = "plugin";
-            const string samplePresetFileName = "SamplePreset.json";
+            const string wavePresetFileName = "WavePreset.json";
+            const string mp3PresetFileName = "Mp3Preset.json";
             #endregion
 
             // アセンブリが Unload された時の処理を登録
@@ -63,8 +73,11 @@ namespace MegriaCore.YMM4.WaveOutput
                 dllPath = null;
             }
 
-            string? samplePresetFilePath = null;
-            SamplePreset? samplePreset = null;
+            string? wavePresetFilePath = null;
+            SamplePreset? wavePreset = null;
+
+            string? mp3PresetFilePath = null;
+            Mp3SamplePreset? mp3Preset = null;
             if (dllPath is not null)
             {
                 System.IO.DirectoryInfo directoryInfo = new(System.IO.Path.GetDirectoryName(dllPath) ?? string.Empty);
@@ -82,22 +95,42 @@ namespace MegriaCore.YMM4.WaveOutput
                             // _ = ShowMessage($"{directoryInfo.FullName} を作成しました。");
                         }
                     }
-                    samplePresetFilePath = System.IO.Path.Combine(directoryInfo.FullName, samplePresetFileName);
+                    wavePresetFilePath = System.IO.Path.Combine(directoryInfo.FullName, wavePresetFileName);
 
-                    #region SamplePreset インスタンス作成処理
+                    #region WaveSamplePreset インスタンス作成処理
 
-                    System.IO.FileInfo fileInfo = new(samplePresetFilePath);
+                    System.IO.FileInfo fileInfo = new(wavePresetFilePath);
                     if (!fileInfo.Exists)
                     {
-                        samplePreset = SamplePreset.GetDefaultSamplePreset();
-                        SaveSampleFile(fileInfo, samplePreset);
+                        wavePreset = SamplePreset.GetDefaultSamplePreset();
+                        SaveSampleFile(fileInfo, wavePreset);
 
                         // Debug
                         // _ = ShowMessage($"{fileInfo.FullName} を作成しました。");
                     }
                     else
                     {
-                        samplePreset = LoadSampleFile(fileInfo);
+                        wavePreset = LoadSampleFile<SamplePreset>(fileInfo);
+                    }
+
+                    #endregion
+
+                    mp3PresetFilePath = System.IO.Path.Combine(directoryInfo.FullName, mp3PresetFileName);
+
+                    #region WaveSamplePreset インスタンス作成処理
+
+                    fileInfo = new(mp3PresetFilePath);
+                    if (!fileInfo.Exists)
+                    {
+                        mp3Preset = Mp3SamplePreset.GetDefaultSamplePreset();
+                        SaveSampleFile(fileInfo, mp3Preset);
+
+                        // Debug
+                        // _ = ShowMessage($"{fileInfo.FullName} を作成しました。");
+                    }
+                    else
+                    {
+                        mp3Preset = LoadSampleFile<Mp3SamplePreset>(fileInfo);
                     }
 
                     #endregion
@@ -110,15 +143,17 @@ namespace MegriaCore.YMM4.WaveOutput
             }
 
             Resource.dllPath = dllPath!;
-            Resource.samplePresetFilePath = samplePresetFilePath!;
-            Resource.samplePreset = samplePreset ?? SamplePreset.GetDefaultSamplePreset();
+            Resource.wavePresetFilePath = wavePresetFilePath!;
+            Resource.waveSamplePreset = wavePreset ?? SamplePreset.GetDefaultSamplePreset();
+            Resource.mp3PresetFilePath = mp3PresetFilePath!;
+            Resource.mp3SamplePreset = mp3Preset ?? Mp3SamplePreset.GetDefaultSamplePreset();
         }
 
-        internal static SamplePreset LoadSampleFile(FileInfo fileInfo)
+        internal static T LoadSampleFile<T>(FileInfo fileInfo) where T : SamplePreset
         {
 
             using FileStream fileStream = fileInfo.Open(FileMode.Open, FileAccess.Read);
-            var result = System.Text.Json.JsonSerializer.Deserialize<SamplePreset>(fileStream, jsonSerializerOptions)!;
+            var result = System.Text.Json.JsonSerializer.Deserialize<T>(fileStream, jsonSerializerOptions)!;
 
             // Debug
             // _ = ShowMessage($"{fileInfo.FullName} を読み取りました。");
@@ -129,7 +164,16 @@ namespace MegriaCore.YMM4.WaveOutput
         {
             try
             {
-                samplePreset = LoadSampleFile(new System.IO.FileInfo(samplePresetFilePath));
+                waveSamplePreset = LoadSampleFile<SamplePreset>(new System.IO.FileInfo(wavePresetFilePath));
+            }
+            catch (Exception ex)
+            {
+                // Debug
+                _ = ShowErrer(ex);
+            }
+            try
+            {
+                mp3SamplePreset = LoadSampleFile<Mp3SamplePreset>(new System.IO.FileInfo(mp3PresetFilePath));
             }
             catch (Exception ex)
             {
@@ -138,6 +182,11 @@ namespace MegriaCore.YMM4.WaveOutput
             }
         }
         internal static void SaveSampleFile(FileInfo fileInfo, SamplePreset sample)
+        {
+            using FileStream fileStream = fileInfo.Open(FileMode.OpenOrCreate, FileAccess.Write);
+            System.Text.Json.JsonSerializer.Serialize(fileStream, sample, jsonSerializerOptions);
+        }
+        internal static void SaveSampleFile(FileInfo fileInfo, Mp3SamplePreset sample)
         {
             using FileStream fileStream = fileInfo.Open(FileMode.OpenOrCreate, FileAccess.Write);
             System.Text.Json.JsonSerializer.Serialize(fileStream, sample, jsonSerializerOptions);
@@ -160,10 +209,10 @@ namespace MegriaCore.YMM4.WaveOutput
             /*
             try
             {
-                FileInfo fileInfo = new FileInfo(samplePresetFilePath);
+                FileInfo fileInfo = new FileInfo(waveSamplePresetFilePath);
                 if (fileInfo.Exists)
                 {
-                    SaveSampleFile(fileInfo, samplePreset);
+                    SaveSampleFile(fileInfo, waveSamplePreset);
                 }
             }
             catch

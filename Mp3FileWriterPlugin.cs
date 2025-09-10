@@ -10,7 +10,7 @@ using YukkuriMovieMaker.Project;
 
 namespace MegriaCore.YMM4.WaveOutput
 {
-    public class WaveFileWriterPlugin : IVideoFileWriterPlugin
+    public class Mp3FileWriterPlugin : IVideoFileWriterPlugin
     {
 
         /// <summary>
@@ -24,7 +24,7 @@ namespace MegriaCore.YMM4.WaveOutput
         /// プラグインの名前
         /// </summary>
         public string Name => name;
-        private const string name = "WAV 出力";
+        private const string name = "MP3 出力";
 
         /// <summary>
         /// 動画出力クラスを作成する
@@ -34,7 +34,7 @@ namespace MegriaCore.YMM4.WaveOutput
         /// <returns>動画出力クラス</returns>
         public IVideoFileWriter CreateVideoFileWriter(string path, VideoInfo videoInfo)
         {
-            return new WaveFileWriter(path, videoInfo, outputOption!);
+            return new Mp3FileWriter(path, videoInfo, outputOption!);
         }
 
         /// <summary>
@@ -55,7 +55,7 @@ namespace MegriaCore.YMM4.WaveOutput
         /// <returns></returns>
         public string GetFileExtention()
         {
-            return ".wav";
+            return ".mp3";
         }
 
         /// <summary>
@@ -67,7 +67,7 @@ namespace MegriaCore.YMM4.WaveOutput
         /// <returns></returns>
         public UIElement GetVideoConfigView(string projectName, VideoInfo videoInfo, int length)
         {
-            outputOption = new StaticWaveOutputOption();
+            outputOption = new StaticMp3OutputOption();
             WaveOptionControl optionControl = new(outputOption);
 
             return optionControl;

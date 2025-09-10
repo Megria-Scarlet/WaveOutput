@@ -11,7 +11,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using Vortice.Direct2D1;
-using Windows.Win32.System.Com;
 using YukkuriMovieMaker.Plugin.FileWriter;
 using YukkuriMovieMaker.Project;
 
@@ -19,11 +18,11 @@ namespace MegriaCore.YMM4.WaveOutput
 {
     public class WaveFileWriter : IVideoFileWriter, IVideoFileWriter2
     {
-        private bool disposedValue;
+        protected bool disposedValue;
 
         public bool IsDisposed => disposedValue;
 
-        private string filePath;
+        protected string filePath;
         public string FilePath
         {
             get
@@ -32,7 +31,7 @@ namespace MegriaCore.YMM4.WaveOutput
                 return filePath;
             }
         }
-        private VideoInfo videoInfo;
+        protected VideoInfo videoInfo;
         public VideoInfo VideoInfo
         {
             get
@@ -41,7 +40,7 @@ namespace MegriaCore.YMM4.WaveOutput
                 return videoInfo;
             }
         }
-        private OutputOption outputOption;
+        protected OutputOption outputOption;
         public OutputOption OutputOption
         {
             get
@@ -51,11 +50,11 @@ namespace MegriaCore.YMM4.WaveOutput
             }
         }
 
-        private string? tempPath; // 一時ファイルパス
-        private FileStream fileStream; // 一時ファイルストリーム
-        private NAudio.Wave.WaveFileWriter fileWriter; // 一時ファイルライター
-
         public VideoFileWriterSupportedStreams SupportedStreams => VideoFileWriterSupportedStreams.Audio;
+
+        protected string? tempPath; // 一時ファイルパス
+        protected FileStream fileStream; // 一時ファイルストリーム
+        protected NAudio.Wave.WaveFileWriter fileWriter; // 一時ファイルライター
 
         public WaveFileWriter()
         {
@@ -94,7 +93,26 @@ namespace MegriaCore.YMM4.WaveOutput
 
         public void WriteAudio(float[] samples)
         {
-            fileWriter!.WriteSamples(samples, 0, samples.Length);
+            try
+            {
+                fileWriter!.WriteSamples(samples, 0, samples.Length);
+            }
+            catch (OutOfMemoryException ex)
+            {
+                string message;
+                if (fileStream.Length < 4 * 1024 * 1024 * 1024L)
+                {
+                    string drive = Path.GetPathRoot(tempPath) ?? string.Empty;
+                    message = $"{ex.GetType().Name} エラーが発生しました。\n\"{drive}\" ドライブの容量が不足している可能性があります。\n\n{ex.Message}";
+                }
+                else
+                {
+                    message = $"{ex.GetType().Name} エラーが発生しました。\n4 GB を超える .wav ファイルは作成できません。\n\n{ex.Message}";
+                }
+                 
+                MessageBox.Show(message, $"エラー {ex.GetType().Name}", MessageBoxButton.OK, MessageBoxImage.Error);
+                throw;
+            }
         }
 
         public void WriteVideo(ID2D1Bitmap1 frame)
@@ -102,7 +120,7 @@ namespace MegriaCore.YMM4.WaveOutput
             
         }
 
-        private void Save()
+        protected virtual void Save()
         {
             // MessageBox.Show(outputOption.BitsAndChannel?.Label ?? "null");
             if (fileWriter is not null)
@@ -118,10 +136,13 @@ namespace MegriaCore.YMM4.WaveOutput
                     bits = bitsAndChannel.Bits;
                     channel = bitsAndChannel.Channel;
                 }
-
+                bool isIeeeFloat = bits == -1;
                 // 出力フォーマットが一時ファイルフォーマットと同一の場合はファイルを移動させる
-                if (tmpFormat.SampleRate == hertz && tmpFormat.Encoding != WaveFormatEncoding.IeeeFloat && channel == 2)
+                if (tmpFormat.SampleRate == hertz && isIeeeFloat && channel == 2)
                 {
+                    fileWriter.Dispose();
+                    fileStream.Dispose();
+
                     FileInfo fileInfo = new FileInfo(tempPath!);
                     fileInfo.MoveTo(filePath);
 
@@ -129,111 +150,81 @@ namespace MegriaCore.YMM4.WaveOutput
                     return;
                 }
 
-                WaveFormat outputFormat = bits == -1 ? WaveFormat.CreateIeeeFloatWaveFormat(hertz, channel) : new WaveFormat(hertz, bits, channel);
+                WaveFormat outputFormat = isIeeeFloat ? WaveFormat.CreateIeeeFloatWaveFormat(hertz, channel) : new WaveFormat(hertz, bits, channel);
 
-                fileWriter.Flush();
-                fileStream.Position = 0;
-
-                // using WaveStream waveStream = new RawSourceWaveStream(fileStream, tmpFormat);
-                using WaveStream waveStream = new WaveFileReader(fileStream);
-
-                ISampleProvider provider = new NAudio.Wave.SampleProviders.WaveToSampleProvider(waveStream);
-                switch (bits)
+                try
                 {
-                    case 16:
-
-                        if (channel == 1)
-                        {
-                            if (tmpFormat.SampleRate != outputFormat.SampleRate)
-                            {
-                                using MediaFoundationResampler resampler = new(waveStream, hertz);
-                                NAudio.Wave.SampleProviders.WaveToSampleProvider provider1 = new(resampler);
-                                WriteSampleToMonaural(provider1, filePath, outputFormat);
-                            }
-                            else
-                            {
-                                WriteSampleToMonaural(provider, filePath, outputFormat);
-                            }
-                            return;
-                        }
-                        if (channel == 2)
-                        {
-                            if (tmpFormat.SampleRate == outputFormat.SampleRate)
-                            {
-                                NAudio.Wave.WaveFileWriter.CreateWaveFile16(filePath, provider);
-                            }
-                            else
-                            {
-                                using MediaFoundationResampler resampler = new(waveStream, hertz);
-                                WaveFloatTo16Provider provider16 = new(resampler);
-                                NAudio.Wave.WaveFileWriter.CreateWaveFile(filePath, provider16);
-                            }
-                            return;
-                        }
-
-                        break;
-                    case 24:
-                        if (channel == 1)
-                        {
-                            if (tmpFormat.SampleRate == outputFormat.SampleRate)
-                            {
-                                // NAudio.Wave.SampleProviders.SampleToWaveProvider24 provider24 = new(provider);
-                                WriteSampleToMonaural(provider, filePath, outputFormat);
-                            }
-                            else
-                            {
-                                using MediaFoundationResampler resampler = new(waveStream, hertz);
-                                NAudio.Wave.SampleProviders.WaveToSampleProvider provider1 = new(resampler);
-                                WriteSampleToMonaural(provider1, filePath, outputFormat);
-                            }
-                            return;
-                        }
-                        if (channel == 2)
-                        {
-                            if (tmpFormat.SampleRate == outputFormat.SampleRate)
-                            {
-                                Write24Bit(provider);
-                            }
-                            else
-                            {
-                                using MediaFoundationResampler resampler = new(waveStream, hertz);
-                                NAudio.Wave.SampleProviders.WaveToSampleProvider provider1 = new(resampler);
-                                Write24Bit(provider1);
-                            }
-                            void Write24Bit(ISampleProvider provider)
-                            {
-                                NAudio.Wave.SampleProviders.SampleToWaveProvider24 provider24 = new(provider);
-                                NAudio.Wave.WaveFileWriter.CreateWaveFile(filePath, provider24);
-                            }
-                            return;
-                        }
-                        break;
-                    case -1:
-                        if (channel == 1)
-                        {
-                            if (tmpFormat.SampleRate == outputFormat.SampleRate)
-                            {
-                                WriteSampleToMonaural(provider, filePath, outputFormat);
-                            }
-                            else
-                            {
-                                using MediaFoundationResampler resampler = new(waveStream, hertz);
-                                NAudio.Wave.SampleProviders.WaveToSampleProvider provider1 = new(resampler);
-                                WriteSampleToMonaural(provider1, filePath, outputFormat);
-                            }
-                            return;
-                        }
-                        if (channel == 2)
-                        {
-                            using MediaFoundationResampler resampler = new(waveStream, hertz);
-                            NAudio.Wave.WaveFileWriter.CreateWaveFile(filePath, resampler);
-                            return;
-                        }
-                        break;
+                    fileWriter.Flush();
+                    fileStream.Position = 0;
                 }
-                throw new FormatException("不正なフォーマットです。");
+                catch (IOException ex)
+                {
+                    throw new IOException("Stream のシークでエラーが発生しました。\n" + ex.Message, ex);
+                }
+                try
+                {
+                    // using WaveStream waveStream = new RawSourceWaveStream(fileStream, tmpFormat);
+                    using WaveStream waveStream = new WaveFileReader(fileStream);
+
+                    if (tmpFormat.SampleRate != outputFormat.SampleRate)
+                    {
+                        using MediaFoundationResampler resampler = new(waveStream, hertz);
+                        Save(resampler, filePath, outputFormat);
+                    }
+                    else
+                    {
+                        Save(waveStream, filePath, outputFormat);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception("ファイル出力でエラーが発生しました。", ex);
+                }
+                return;
             }
         }
+
+        private static void Save(NAudio.Wave.IWaveProvider waveProvider, string filePath, WaveFormat outFormat)
+        {
+
+            switch (outFormat.Channels)
+            {
+                case 1:
+                    NAudio.Wave.SampleProviders.WaveToSampleProvider sampleProvider = new(waveProvider);
+                    WriteSampleToMonaural(sampleProvider, filePath, outFormat);
+                    return;
+                case 2:
+                    break;
+                default:
+                    //「出力フォーマットは無効なチャンネル数です。」
+                    throw new FormatException("Output format has an invalid number of channels.");
+            }
+
+            if (outFormat.Encoding == WaveFormatEncoding.IeeeFloat)
+            {
+                CreateWaveFile(filePath, waveProvider);
+                return;
+            }
+
+            switch (outFormat.BitsPerSample)
+            {
+                case 16:
+                    {
+                        WaveFloatTo16Provider provider = new(waveProvider);
+                        CreateWaveFile(filePath, provider);
+                    }
+                    return;
+                case 24:
+                    {
+                        using WaveFloatTo24Provider provider = new(waveProvider);
+                        CreateWaveFile(filePath, provider);
+                    }
+                    return;
+            }
+            //「出力フォーマットは無効なビット数です。」
+            throw new FormatException("Output format has an invalid number of bits.");
+        }
+
         /// <summary>
         /// <paramref name="provider"/> をモノラル化してファイルを保存します。
         /// </summary>
@@ -306,8 +297,6 @@ namespace MegriaCore.YMM4.WaveOutput
                                     fileInfo.Delete();
                                 }
                             }
-                            fileWriter.Dispose();
-                            fileStream.Dispose();
                         }
                         else
                         {
@@ -364,5 +353,40 @@ namespace MegriaCore.YMM4.WaveOutput
             while (true);
         }
         */
+
+        /// <summary>
+        /// 指定した <see cref="IWaveProvider"/> オブジェクトのデータを、指定したファイルパスに保存します。
+        /// </summary>
+        /// <remarks>
+        /// <see cref="ArrayPool{T}"/> を使用した、 <see cref="NAudio.Wave.WaveFileWriter.CreateWaveFile(string, IWaveProvider)"/> と同等なメソッドです。
+        /// </remarks>
+        /// <param name="filename">保存先のファイルパス。</param>
+        /// <param name="sourceProvider">保存する <see cref="IWaveProvider"/> オブジェクト。</param>
+        public static void CreateWaveFile(string filename, IWaveProvider sourceProvider)
+        {
+            using NAudio.Wave.WaveFileWriter waveFileWriter = new(filename, sourceProvider.WaveFormat);
+
+            var pool = ArrayPool<byte>.Shared;
+
+            int length = sourceProvider.WaveFormat.AverageBytesPerSecond * 4;
+            byte[] array = pool.Rent(length);
+            try
+            {
+                while (true)
+                {
+                    int num = sourceProvider.Read(array, 0, length);
+                    if (num == 0)
+                    {
+                        break;
+                    }
+
+                    waveFileWriter.Write(array, 0, num);
+                }
+            }
+            finally
+            {
+                pool.Return(array);
+            }
+        }
     }
 }

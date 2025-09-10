@@ -1,18 +1,19 @@
 ﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Threading.Channels;
 
 namespace MegriaCore.YMM4.WaveOutput
 {
     public class OutputOption : INotifyPropertyChanged, IDisposable
     {
-        private bool disposedValue;
+        protected bool disposedValue;
         public bool IsDisposed
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => disposedValue;
         }
 
-        private int sampleIndex = -1;
+        protected int sampleIndex = -1;
         public int SampleIndex
         {
             get
@@ -30,7 +31,7 @@ namespace MegriaCore.YMM4.WaveOutput
                 }
             }
         }
-        private IEnumerable<SamplePresetValue> samples;
+        protected IEnumerable<SamplePresetValue> samples;
         public IEnumerable<SamplePresetValue> Samples
         {
             get
@@ -38,7 +39,7 @@ namespace MegriaCore.YMM4.WaveOutput
                 ObjectDisposedException.ThrowIf(disposedValue, this);
                 return samples;
             }
-            internal set
+            protected internal set
             {
                 ObjectDisposedException.ThrowIf(disposedValue, this);
                 if (value != samples)
@@ -49,7 +50,7 @@ namespace MegriaCore.YMM4.WaveOutput
             }
         }
 
-        private BitsAndChannel? bitsAndChannel = bitsAndChannels[1]; //new(16, 2);
+        protected BitsAndChannel? bitsAndChannel = bitsAndChannels[1]; //new(16, 2);
 
         public BitsAndChannel? BitsAndChannel
         {
@@ -68,30 +69,38 @@ namespace MegriaCore.YMM4.WaveOutput
             }
         }
 
+        #region NotifyPropertyChanged
+
         public event PropertyChangedEventHandler? PropertyChanged;
 
         // This method is called by the Set accessor of each property.
         // The CallerMemberName attribute that is applied to the optional propertyName
         // parameter causes the property name of the caller to be substituted as an argument.
-        private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
+        protected void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
-        public OutputOption()
+        protected void NotifyPropertyChanged(object sender, PropertyChangedEventArgs args)
         {
-            var samplePreset = Resource.samplePreset;
-            samples = samplePreset.PresetValues;
-            sampleIndex = samplePreset.DefaultIndex;
+            PropertyChanged?.Invoke(sender, args);
+        }
+        #endregion
+
+        #region コンストラクタ
+        public OutputOption() : this(SamplePreset.GetDefaultSamplePreset())
+        {
+
         }
         public OutputOption(IEnumerable<SamplePresetValue> samples, int sampleIndex)
         {
             this.samples = samples;
             this.sampleIndex = sampleIndex;
         }
-        internal OutputOption(SamplePreset preset) : this(preset.PresetValues, preset.DefaultIndex)
+        public OutputOption(SamplePreset preset) : this(preset.Samples, preset.DefaultSampleIndex)
         {
 
         }
+        #endregion
 
         protected virtual void Dispose(bool disposing)
         {
@@ -132,6 +141,15 @@ namespace MegriaCore.YMM4.WaveOutput
             this.PropertyChanged = null;
         }
 
+        public virtual void ReloadSamplePresetFile()
+        {
+
+        }
+        public virtual void OpenSamplePresetFile()
+        {
+
+        }
+
         private static readonly BitsAndChannel[] bitsAndChannels = [
             new BitsAndChannel(16, 1),
             new BitsAndChannel(16, 2),
@@ -142,12 +160,133 @@ namespace MegriaCore.YMM4.WaveOutput
             ];
 
         private static System.Collections.ObjectModel.ReadOnlyCollection<BitsAndChannel> bitsAndChannelsList = new(bitsAndChannels);
-        public static System.Collections.ObjectModel.ReadOnlyCollection<BitsAndChannel> BitsAndChannels { get => bitsAndChannelsList; }
+        public virtual IList<BitsAndChannel> BitsAndChannels { get => bitsAndChannelsList; }
     }
+
+    public class StaticWaveOutputOption : OutputOption
+    {
+        public StaticWaveOutputOption() : base(Resource.waveSamplePreset)
+        {
+
+        }
+        public override void OpenSamplePresetFile()
+        {
+            if (System.IO.File.Exists(Resource.wavePresetFilePath))
+            {
+                System.Diagnostics.Process.Start("EXPLORER.EXE", Resource.wavePresetFilePath);
+            }
+        }
+        public override void ReloadSamplePresetFile()
+        {
+            Resource.ReloadSampleFile();
+
+            var item = samples.ElementAtOrDefault(sampleIndex);
+
+            var preset = Resource.waveSamplePreset;
+            var values = preset.Samples;
+            if (samples != values)
+            {
+                samples = values;
+                NotifyPropertyChanged(nameof(Samples));
+            }
+
+            if (item is null)
+            {
+                sampleIndex = preset.DefaultSampleIndex;
+            }
+            else
+            {
+                int index = values.IndexOf(item);
+                if (sampleIndex != index)
+                {
+                    sampleIndex = index;
+                    NotifyPropertyChanged(nameof(SampleIndex));
+                }
+            }
+        }
+    }
+
+    public class StaticMp3OutputOption : OutputOption
+    {
+        public StaticMp3OutputOption() : base(Resource.mp3SamplePreset)
+        {
+            var mp3Preset = Resource.mp3SamplePreset;
+            List<BitsAndChannel> channels = new(mp3Preset.BitRates.Count * 2);
+
+            foreach (var bitRate in mp3Preset.BitRates)
+            {
+                channels.Add(new Mp3BitsAndChannel(bitRate.BitRate, 1, bitRate.Label));
+                channels.Add(new Mp3BitsAndChannel(bitRate.BitRate, 2, bitRate.Label));
+            }
+            bitsAndChannels = channels;
+            bitsAndChannel = channels.ElementAtOrDefault(mp3Preset.DefaultBitRateIndex * 2 + 1);
+        }
+        public override void OpenSamplePresetFile()
+        {
+            if (System.IO.File.Exists(Resource.mp3PresetFilePath))
+            {
+                System.Diagnostics.Process.Start("EXPLORER.EXE", Resource.mp3PresetFilePath);
+            }
+        }
+        public override void ReloadSamplePresetFile()
+        {
+            Resource.ReloadSampleFile();
+
+            var item = samples.ElementAtOrDefault(sampleIndex);
+
+            var preset = Resource.mp3SamplePreset;
+            var values = preset.Samples;
+            if (samples != values)
+            {
+                samples = values;
+                NotifyPropertyChanged(nameof(Samples));
+            }
+
+            if (item is null)
+            {
+                sampleIndex = preset.DefaultSampleIndex;
+            }
+            else
+            {
+                int index = values.IndexOf(item);
+                if (sampleIndex != index)
+                {
+                    sampleIndex = index;
+                    NotifyPropertyChanged(nameof(SampleIndex));
+                }
+            }
+
+            List<BitsAndChannel> channels = new(preset.BitRates.Count * 2);
+
+            foreach (var bitRate in preset.BitRates)
+            {
+                channels.Add(new Mp3BitsAndChannel(bitRate.BitRate, 1, bitRate.Label));
+                channels.Add(new Mp3BitsAndChannel(bitRate.BitRate, 2, bitRate.Label));
+            }
+            bitsAndChannels = channels;
+            bitsAndChannel = channels.ElementAtOrDefault(preset.DefaultBitRateIndex * 2 + 1);
+            NotifyPropertyChanged(nameof(BitsAndChannels));
+        }
+
+        private static readonly BitsAndChannel[] defaultBitsAndChannels = [
+            new Mp3BitsAndChannel(128000, 1),
+            new Mp3BitsAndChannel(128000, 2),
+            new Mp3BitsAndChannel(192000, 1),
+            new Mp3BitsAndChannel(192000, 2),
+            new Mp3BitsAndChannel(256000, 1),
+            new Mp3BitsAndChannel(256000, 2),
+            ];
+
+        private static System.Collections.ObjectModel.ReadOnlyCollection<BitsAndChannel> bitsAndChannelsList = new(defaultBitsAndChannels);
+
+        protected IList<BitsAndChannel> bitsAndChannels;
+        public override IList<BitsAndChannel> BitsAndChannels { get => bitsAndChannels; }
+    }
+
     public class BitsAndChannel : IEquatable<BitsAndChannel>
     {
-        private int bits;
-        private int channel;
+        protected int bits;
+        protected int channel;
 
         public int Bits
         {
@@ -160,7 +299,7 @@ namespace MegriaCore.YMM4.WaveOutput
             set => channel = value;
         }
 
-        public string Label
+        public virtual string Label
         {
             get
             {
@@ -200,5 +339,37 @@ namespace MegriaCore.YMM4.WaveOutput
         }
 
         public static bool operator !=(BitsAndChannel? left, BitsAndChannel? right) => !(left == right);
+    }
+    public class Mp3BitsAndChannel : BitsAndChannel, IEquatable<BitsAndChannel>
+    {
+        protected string? label;
+        public Mp3BitsAndChannel() : this(196000, 2) { }
+        public Mp3BitsAndChannel(int bits, int channel) : base(bits, channel)
+        {
+
+        }
+        public Mp3BitsAndChannel(int bits, int channel, string? label) : base(bits, channel)
+        {
+            this.label = label;
+        }
+        public override string Label
+        {
+            get
+            {
+                string c = channel == 2 ? "ステレオ" : "モノラル";
+                if (label is not null)
+                {
+                    return $"{label} - {c}";
+                }
+                if (bits >= 1000)
+                {
+                    return $"{(bits / 1000):N0} kbps - {c}";
+                }
+                else
+                {
+                    return $"{bits:N0} bps - {c}";
+                }
+            }
+        }
     }
 }

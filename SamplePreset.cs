@@ -13,37 +13,37 @@ namespace MegriaCore.YMM4.WaveOutput
     [JsonConverter(typeof(SamplePresetJsonConverter))]
     public class SamplePreset
     {
-        protected int defaultIndex;
+        protected int defaultSampleIndex;
 
-        protected List<SamplePresetValue> presetValues;
+        protected List<SamplePresetValue> samples;
 
         public SamplePreset()
         {
-            defaultIndex = 0;
-            presetValues = [];
+            defaultSampleIndex = 0;
+            samples = [];
         }
 
         public SamplePreset(IEnumerable<SamplePresetValue> presetValues, int defaultIndex = 0)
         {
-            this.presetValues = new(presetValues);
-            this.defaultIndex = defaultIndex;
+            this.samples = new(presetValues);
+            this.defaultSampleIndex = defaultIndex;
         }
 
         public SamplePreset(List<SamplePresetValue> presetValues, int defaultIndex = 0)
         {
-            this.presetValues = presetValues;
-            this.defaultIndex = defaultIndex;
+            this.samples = presetValues;
+            this.defaultSampleIndex = defaultIndex;
         }
 
-        public int DefaultIndex
+        public int DefaultSampleIndex
         {
-            get => defaultIndex;
-            set => defaultIndex = value;
+            get => defaultSampleIndex;
+            set => defaultSampleIndex = value;
         }
 
-        public List<SamplePresetValue> PresetValues
+        public List<SamplePresetValue> Samples
         {
-            get => presetValues;
+            get => samples;
         }
 
 
@@ -65,21 +65,73 @@ namespace MegriaCore.YMM4.WaveOutput
         }
     }
 
-    /// <summary>
-    /// サンプリング数とラベル名を管理するクラス
-    /// </summary>
-    [JsonConverter(typeof(SamplePresetValueJsonConverter))]
-    public class SamplePresetValue : IEquatable<SamplePresetValue>
+    [JsonConverter(typeof(Mp3PresetJsonConverter))]
+    public class Mp3SamplePreset : SamplePreset
+    {
+        protected internal int defaultBitRateIndex;
+
+        protected internal List<BitRatePresetValue> bitRates;
+        public Mp3SamplePreset()
+        {
+            defaultBitRateIndex = 0;
+            bitRates = [];
+        }
+
+        public Mp3SamplePreset(IEnumerable<SamplePresetValue> samples, int defaultIndex = 0) : base(samples, defaultIndex)
+        {
+            defaultBitRateIndex = 0;
+            bitRates = [];
+        }
+
+        public Mp3SamplePreset(List<SamplePresetValue> samples, int defaultIndex = 0) : base(samples, defaultIndex)
+        {
+            defaultBitRateIndex = 0;
+            bitRates = [];
+        }
+        internal Mp3SamplePreset(SamplePreset preset) : base(preset.Samples, preset.DefaultSampleIndex)
+        {
+            defaultBitRateIndex = 0;
+            bitRates = [];
+        }
+        public int DefaultBitRateIndex
+        {
+            get => defaultBitRateIndex;
+            set => defaultBitRateIndex = value;
+        }
+
+        public List<BitRatePresetValue> BitRates
+        {
+            get => bitRates;
+        }
+
+
+        /// <summary>
+        /// 既定の <see cref="SamplePreset"/> を新しく作成して取得します。
+        /// </summary>
+        /// <returns>新しく作成した既定の <see cref="SamplePreset"/> 型のオブジェクト。</returns>
+        new internal static Mp3SamplePreset GetDefaultSamplePreset()
+        {
+            var re = new Mp3SamplePreset(SamplePreset.GetDefaultSamplePreset())
+            {
+                bitRates = [
+                new(96000),
+                new(128000),
+                new(192000),
+                new(256000)
+                ],
+                defaultBitRateIndex = 2
+            };
+            return re;
+        }
+    }
+
+    public class LabelUnitValue : IEquatable<LabelUnitValue>
     {
         #region フィールド変数
         /// <summary>
         /// ラベル名
         /// </summary>
         protected string? label;
-        /// <summary>
-        /// サンプリング数
-        /// </summary>
-        protected int sample;
         /// <summary>
         /// 単位名
         /// </summary>
@@ -97,6 +149,57 @@ namespace MegriaCore.YMM4.WaveOutput
             get => ref label;
         }
         /// <summary>
+        /// 有効なラベル名を取得します。
+        /// </summary>
+        /// <returns>有効なラベル名を示す文字列。</returns>
+        [JsonIgnore]
+        public virtual string ActualLabel
+        {
+            get
+            {
+                return label ?? string.Empty;
+            }
+        }
+        public string? Unit
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => unit;
+        }
+
+        #endregion
+
+        public LabelUnitValue() { }
+        public LabelUnitValue(string? label, string? unit)
+        {
+            this.label = label;
+            this.unit = unit;
+        }
+
+        public bool Equals(LabelUnitValue? other)
+        {
+            if (ReferenceEquals(other, this))
+                return true;
+            if (other is null || other.GetType() != GetType())
+                return false;
+            return other.label == this.label && other.unit == this.unit;
+        }
+    }
+
+    /// <summary>
+    /// サンプリング数とラベル名を管理するクラス
+    /// </summary>
+    [JsonConverter(typeof(SamplePresetValueJsonConverter))]
+    public class SamplePresetValue : LabelUnitValue, IEquatable<SamplePresetValue>
+    {
+        #region フィールド変数
+        /// <summary>
+        /// サンプリング数
+        /// </summary>
+        protected int sample;
+        #endregion
+
+        #region 公開プロパティ
+        /// <summary>
         /// サンプリング数を取得します。
         /// </summary>
         /// <returns>サンプリング数を示す 32 ビット符号付き整数。</returns>
@@ -109,17 +212,12 @@ namespace MegriaCore.YMM4.WaveOutput
         /// </summary>
         /// <returns>有効なラベル名を示す文字列。</returns>
         [JsonIgnore]
-        public virtual string ActualLabel
+        public override string ActualLabel
         {
             get
             {
                 return label is null ? sample.ToString("N0") : label;
             }
-        }
-        public string? Unit
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => unit;
         }
 
         #endregion
@@ -141,9 +239,9 @@ namespace MegriaCore.YMM4.WaveOutput
         {
             if (ReferenceEquals(other, this))
                 return true;
-            if (other is null || other.GetType() != typeof(SamplePresetValue))
+            if (other is null || other.GetType() != GetType())
                 return false;
-            return other.label == this.label && other.sample == this.sample;
+            return other.label == this.label && other.sample == this.sample && other.unit == this.unit;
         }
         public override bool Equals(object? obj) => obj is SamplePresetValue value && Equals(value);
 
@@ -158,6 +256,67 @@ namespace MegriaCore.YMM4.WaveOutput
         }
 
         public static bool operator !=(SamplePresetValue? left, SamplePresetValue? right) => !(left == right);
+    }
+
+    [JsonConverter(typeof(BitRatePresetValueJsonConverter))]
+    public class BitRatePresetValue : LabelUnitValue, IEquatable<BitRatePresetValue>
+    {
+        #region フィールド変数
+        /// <summary>
+        /// ビットレート
+        /// </summary>
+        protected int bitRate;
+        #endregion
+
+        #region 公開プロパティ
+        /// <summary>
+        /// ビットレート数を取得します。
+        /// </summary>
+        /// <returns>ビットレート数を示す 32 ビット符号付き整数。</returns>
+        public virtual int BitRate
+        {
+            get => bitRate;
+        }
+        /// <summary>
+        /// 有効なラベル名を取得します。
+        /// </summary>
+        /// <returns>有効なラベル名を示す文字列。</returns>
+        [JsonIgnore]
+        public override string ActualLabel
+        {
+            get
+            {
+                return label is null ? bitRate.ToString("N0") : label;
+            }
+        }
+
+        #endregion
+
+        #region コンストラクタ
+        public BitRatePresetValue(int bitRate)
+        {
+            this.bitRate = bitRate;
+        }
+        public BitRatePresetValue(int bitRate, string? label, string? unit = null)
+        {
+            this.label = label;
+            this.bitRate = bitRate;
+            this.unit = unit;
+        }
+        #endregion
+
+        public bool Equals(BitRatePresetValue? other)
+        {
+            if (ReferenceEquals(other, this))
+                return true;
+            if (other is null || other.GetType() != GetType())
+                return false;
+            return other.label == this.label && other.bitRate == this.bitRate && other.unit == this.unit;
+        }
+        public override bool Equals(object? obj) => obj is SamplePresetValue value && Equals(value);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override int GetHashCode() => HashCode.Combine(label, bitRate);
     }
 
     public class SamplePresetJsonConverter : JsonConverter<SamplePreset>
@@ -195,12 +354,12 @@ namespace MegriaCore.YMM4.WaveOutput
                     throw new JsonException("There is no value for the property.");
                 }
 
-                if (nameof(SamplePreset.DefaultIndex).Equals(propertyName, StringComparison.OrdinalIgnoreCase))
+                if (nameof(SamplePreset.DefaultSampleIndex).Equals(propertyName, StringComparison.OrdinalIgnoreCase))
                 {
                     if (!reader.TryGetInt32(out defaultIndex))
                         defaultIndex = 0;
                 }
-                else if (nameof(SamplePreset.PresetValues).Equals(propertyName, StringComparison.OrdinalIgnoreCase))
+                else if ("Samples".Equals(propertyName, StringComparison.OrdinalIgnoreCase))
                 {
                     try
                     {
@@ -228,11 +387,123 @@ namespace MegriaCore.YMM4.WaveOutput
         public override void Write(Utf8JsonWriter writer, SamplePreset value, JsonSerializerOptions options)
         {
             writer.WriteStartObject();
-            writer.WriteNumber(nameof(SamplePreset.DefaultIndex), value.DefaultIndex);
+            writer.WriteNumber(nameof(SamplePreset.DefaultSampleIndex), value.DefaultSampleIndex);
 
-            writer.WritePropertyName(nameof(SamplePreset.PresetValues));
-            JsonSerializer.Serialize(writer, value.PresetValues, options);
+            writer.WritePropertyName("Samples");
+            JsonSerializer.Serialize(writer, value.Samples, options);
 
+
+            writer.WriteEndObject();
+        }
+    }
+
+
+    public class Mp3PresetJsonConverter : JsonConverter<Mp3SamplePreset>
+    {
+        public override Mp3SamplePreset Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            // object スコープに入っていることをチェック
+            if (reader.TokenType != JsonTokenType.StartObject)
+            {
+                throw new JsonException("Invalid TokenType");
+            }
+
+            int defaultSampleIndex = 0;
+            int defaultBitRateIndex = 0;
+            List<SamplePresetValue>? samples = null;
+            List<BitRatePresetValue>? bitRates = null;
+
+
+            while (reader.Read())
+            {
+                // object スコープの末尾に達した場合
+                if (reader.TokenType == JsonTokenType.EndObject)
+                {
+                    break;
+                }
+
+                // reader の現在位置が PropertyName ではない場合は再び読み取る
+                if (reader.TokenType != JsonTokenType.PropertyName)
+                {
+                    continue;
+                }
+
+                string propertyName = reader.GetString()!;
+
+                if (!reader.Read())
+                {
+                    throw new JsonException("There is no value for the property.");
+                }
+
+                if (nameof(SamplePreset.DefaultSampleIndex).Equals(propertyName, StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!reader.TryGetInt32(out defaultSampleIndex))
+                        defaultSampleIndex = 0;
+                }
+                else if(nameof(Mp3SamplePreset.DefaultBitRateIndex).Equals(propertyName, StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!reader.TryGetInt32(out defaultBitRateIndex))
+                        defaultBitRateIndex = 0;
+                }
+                else if ("Samples".Equals(propertyName, StringComparison.OrdinalIgnoreCase))
+                {
+                    try
+                    {
+                        var array = JsonSerializer.Deserialize<List<SamplePresetValue>>(ref reader, options);
+                        if (array is not null)
+                        {
+                            samples = array;
+                        }
+                    }
+                    catch
+                    {
+
+                    }
+                }
+                else if ("BitRates".Equals(propertyName, StringComparison.OrdinalIgnoreCase))
+                {
+                    try
+                    {
+                        var array = JsonSerializer.Deserialize<List<BitRatePresetValue>>(ref reader, options);
+                        if (array is not null)
+                        {
+                            bitRates = array;
+                        }
+                    }
+                    catch
+                    {
+
+                    }
+                }
+                else
+                {
+                    // 互換性のために不明なプロパティのエラーを throw しない
+
+                    // throw new JsonException("Unknown property name");
+                }
+            }
+            Mp3SamplePreset mp3SamplePreset = samples is null ? new Mp3SamplePreset() : new Mp3SamplePreset(samples, int.Clamp(defaultSampleIndex, 0, samples.Count - 1));
+            if (bitRates is not null)
+            {
+                mp3SamplePreset.bitRates = bitRates;
+                mp3SamplePreset.defaultBitRateIndex = int.Clamp(defaultBitRateIndex, 0, bitRates.Count - 1);
+            }
+            return mp3SamplePreset;
+        }
+
+        public override void Write(Utf8JsonWriter writer, Mp3SamplePreset value, JsonSerializerOptions options)
+        {
+            writer.WriteStartObject();
+
+            writer.WriteNumber(nameof(SamplePreset.DefaultSampleIndex), value.DefaultSampleIndex);
+
+            writer.WritePropertyName("Samples");
+            JsonSerializer.Serialize(writer, value.Samples, options);
+
+            writer.WriteNumber(nameof(Mp3SamplePreset.DefaultBitRateIndex), value.DefaultBitRateIndex);
+
+            writer.WritePropertyName("BitRates");
+            JsonSerializer.Serialize(writer, value.BitRates, options);
 
             writer.WriteEndObject();
         }
@@ -310,6 +581,80 @@ namespace MegriaCore.YMM4.WaveOutput
             if (value.Unit is not null)
             {
                 writer.WriteString(nameof(SamplePresetValue.Unit), value.Unit);
+            }
+            writer.WriteEndObject();
+        }
+    }
+
+    public class BitRatePresetValueJsonConverter : JsonConverter<BitRatePresetValue>
+    {
+        public override BitRatePresetValue Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            // object スコープに入っていることをチェック
+            if (reader.TokenType != JsonTokenType.StartObject)
+            {
+                throw new JsonException("Invalid TokenType");
+            }
+
+            string? label = null;
+            string? unit = null;
+            int bitRate = 0;
+
+            while (reader.Read())
+            {
+                // object スコープの末尾に達した場合
+                if (reader.TokenType == JsonTokenType.EndObject)
+                {
+                    break;
+                }
+
+                // reader の現在位置が PropertyName ではない場合は再び読み取る
+                if (reader.TokenType != JsonTokenType.PropertyName)
+                {
+                    continue;
+                }
+
+                string propertyName = reader.GetString()!;
+
+                if (!reader.Read())
+                {
+                    throw new JsonException("There is no value for the property.");
+                }
+
+                if (nameof(BitRatePresetValue.Label).Equals(propertyName, StringComparison.OrdinalIgnoreCase))
+                {
+                    label = reader.GetString();
+                }
+                else if (nameof(BitRatePresetValue.Unit).Equals(propertyName, StringComparison.OrdinalIgnoreCase))
+                {
+                    unit = reader.GetString();
+                }
+                else if (nameof(BitRatePresetValue.BitRate).Equals(propertyName, StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!reader.TryGetInt32(out bitRate))
+                        bitRate = 0;
+                }
+                else
+                {
+                    // 互換性のために不明なプロパティのエラーを throw しない
+
+                    // throw new JsonException("Unknown property name");
+                }
+            }
+            return new BitRatePresetValue(bitRate, label, unit);
+        }
+
+        public override void Write(Utf8JsonWriter writer, BitRatePresetValue value, JsonSerializerOptions options)
+        {
+            writer.WriteStartObject();
+            writer.WriteNumber(nameof(BitRatePresetValue.BitRate), value.BitRate);
+            if (value.Label is not null)
+            {
+                writer.WriteString(nameof(BitRatePresetValue.Label), value.Label);
+            }
+            if (value.Unit is not null)
+            {
+                writer.WriteString(nameof(BitRatePresetValue.Unit), value.Unit);
             }
             writer.WriteEndObject();
         }
