@@ -1,6 +1,6 @@
 # **WaveOutput**
 
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/license/mit)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![.NET](https://img.shields.io/badge/.NET-9.0-purple.svg)
 ![OS](https://img.shields.io/badge/OS-Windows-blue.svg)
 ![ver.2.1.0](https://img.shields.io/badge/Release-ver.2.1-red.svg)
