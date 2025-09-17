@@ -1,9 +1,9 @@
 # **WaveOutput**
 
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-![.NET](https://img.shields.io/badge/.NET-9.0-purple.svg)
-![OS](https://img.shields.io/badge/OS-Windows-blue.svg)
-![ver.2.1.0](https://img.shields.io/badge/Release-ver.2.1-red.svg)
+[![License:MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+![.NET 9.0](https://img.shields.io/badge/.NET-9.0-purple.svg)
+![OS:Windows](https://img.shields.io/badge/OS-Windows-blue.svg)
+![ver.2.1](https://img.shields.io/badge/Release-ver.2.1-red.svg)
 
 制作: Megria  
 GitHub: <https://github.com/Megria-Scarlet/WaveOutput>  
@@ -77,8 +77,8 @@ ver.1.1 以降では出力サンプリング数を `.json` ファイルで編集
   * プリセットファイルを GUI から再読み込みする機能を追加
   * [**MP3 出力**] 機能を追加
 
-* ver.2.1 - beta
-  * 編集時のサンプリングレートと出力時のサンプリングが同じ場合は直接ファイルを作成するように最適化
+* ver.2.1 (2025/09/17)
+  * [**WAV 出力**] で、編集のサンプリングレートと出力のサンプリングが同じ場合は直接ファイルを作成するように最適化
   * モノラル化の処理を最適化
 
 [link-ymm4]:https://manjubox.net/ymm4/
