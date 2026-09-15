@@ -183,6 +183,11 @@ namespace MegriaCore.YMM4.WaveOutput
                 return false;
             return other.label == this.label && other.unit == this.unit;
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override bool Equals(object? obj) => Equals(obj as LabelUnitValue);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override int GetHashCode() => HashCode.Combine(this.label, this.unit);
     }
 
     /// <summary>
@@ -344,6 +349,7 @@ namespace MegriaCore.YMM4.WaveOutput
                 // reader の現在位置が PropertyName ではない場合は再び読み取る
                 if (reader.TokenType != JsonTokenType.PropertyName)
                 {
+                    reader.Skip();
                     continue;
                 }
 
@@ -419,6 +425,7 @@ namespace MegriaCore.YMM4.WaveOutput
                 // object スコープの末尾に達した場合
                 if (reader.TokenType == JsonTokenType.EndObject)
                 {
+                    reader.Skip();
                     break;
                 }
 

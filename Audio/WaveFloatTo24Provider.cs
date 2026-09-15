@@ -82,9 +82,10 @@ namespace MegriaCore.YMM4.WaveOutput
             // sourceProvider から読み取る byte 数
             int readByteSize = count / ByteSize * sizeof(float);
 
-            byte[]? sourceBuffer = EnsureSourceBuffer(readByteSize); // sourceBuffer の確保
+            byte[] sourceBuffer = EnsureSourceBuffer(readByteSize); // sourceBuffer の確保
 
-            readByteSize = sourceProvider.Read(sourceBuffer, 0, readByteSize);
+            // readByteSize = sourceProvider.Read(sourceBuffer, 0, readByteSize);
+            readByteSize = sourceProvider.Read(sourceBuffer.AsSpan(0, readByteSize));
 
             // 読み取った byte データを float に再解釈
             Span<float> samples = MemoryMarshal.CreateSpan(ref Helper.GetReference<byte, float>(sourceBuffer), readByteSize >> 2);

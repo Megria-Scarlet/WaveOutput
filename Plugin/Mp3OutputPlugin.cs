@@ -18,7 +18,8 @@ namespace MegriaCore.YMM4.WaveOutput
         /// </summary>
         public VideoFileWriterOutputPath OutputPathMode => VideoFileWriterOutputPath.File;
 
-        private OutputOption? outputOption;
+        private OutputOptionViewModel? outputOption;
+        private WaveOptionControl? waveOptionControl;
 
         /// <summary>
         /// プラグインの名前
@@ -67,10 +68,12 @@ namespace MegriaCore.YMM4.WaveOutput
         /// <returns></returns>
         public UIElement GetVideoConfigView(string projectName, VideoInfo videoInfo, int length)
         {
-            outputOption = new StaticMp3OutputOption();
-            WaveOptionControl optionControl = new(outputOption);
-
-            return optionControl;
+            if (waveOptionControl is null)
+            {
+                outputOption = new StaticMp3OutputOption();
+                waveOptionControl = new(outputOption);
+            }
+            return waveOptionControl;
         }
 
         /// <summary>

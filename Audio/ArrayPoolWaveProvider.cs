@@ -81,11 +81,20 @@ namespace MegriaCore.YMM4.WaveOutput
             GC.SuppressFinalize(this);
         }
 
+        /*
         int IWaveProvider.Read(byte[] buffer, int offset, int count)
         {
             ObjectDisposedException.ThrowIf(disposedValue, this);
             return sourceProvider.Read(buffer, offset, count);
         }
+        */
+
+        int IWaveProvider.Read(Span<byte> buffer)
+        {
+            ObjectDisposedException.ThrowIf(disposedValue, this);
+            return sourceProvider.Read(buffer);
+        }
+
         /// <summary>
         /// 指定した長さ以上の配列をバッファーに確保します。
         /// </summary>

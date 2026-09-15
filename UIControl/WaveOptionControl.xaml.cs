@@ -19,7 +19,7 @@ namespace MegriaCore.YMM4.WaveOutput
         {
             InitializeComponent();
         }
-        public WaveOptionControl(OutputOption option)
+        public WaveOptionControl(OutputOptionViewModel option)
         {
             InitializeComponent();
             this.DataContext = option;
@@ -35,7 +35,7 @@ namespace MegriaCore.YMM4.WaveOutput
 
         private void PresetReloadButton_Click(object sender, RoutedEventArgs e)
         {
-            OutputOption outputOption = (OutputOption)DataContext;
+            OutputOptionViewModel outputOption = (OutputOptionViewModel)DataContext;
             outputOption.ReloadSamplePresetFile();
 
             if (sampleCombo.SelectedIndex < 0)
@@ -46,7 +46,7 @@ namespace MegriaCore.YMM4.WaveOutput
 
         private void PresetEditButton_Click(object sender, RoutedEventArgs e)
         {
-            OutputOption outputOption = (OutputOption)DataContext;
+            OutputOptionViewModel outputOption = (OutputOptionViewModel)DataContext;
             outputOption.OpenSamplePresetFile();
         }
     }

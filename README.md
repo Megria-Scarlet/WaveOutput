@@ -1,9 +1,9 @@
 # **WaveOutput**
 
 [![License:MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-![.NET 9.0](https://img.shields.io/badge/.NET-9.0-purple.svg)
+![.NET 10.0][]
 ![OS:Windows](https://img.shields.io/badge/OS-Windows-blue.svg)
-![ver.2.1](https://img.shields.io/badge/Release-ver.2.1-red.svg)
+![ver.3.0](https://img.shields.io/badge/Release-ver.3.0-red.svg)
 
 制作: Megria  
 GitHub: <https://github.com/Megria-Scarlet/WaveOutput>  
@@ -81,8 +81,14 @@ ver.1.1 以降では出力サンプリング数を `.json` ファイルで編集
   * [**WAV 出力**] で、編集のサンプリングレートと出力のサンプリングが同じ場合は直接ファイルを作成するように最適化
   * モノラル化の処理を最適化
 
+* ver.3.0 (2026/09/16)
+  * ターゲットフレームワークを ![.NET 10.0][] に変更
+  * エンコード設定を展開状態で表示されるように既定値を変更 
+
 [link-ymm4]:https://manjubox.net/ymm4/
 [link-twitter]:https://x.com/Megria1201
 
 [ver.1.1.0]: https://img.shields.io/badge/ver.1.1-red.svg
 [ver.2.0.0~]: https://img.shields.io/badge/ver.2.0_~-red.svg
+
+[.NET 10.0]:https://img.shields.io/badge/.NET-10.0-purple.svg

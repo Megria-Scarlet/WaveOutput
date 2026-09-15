@@ -41,8 +41,8 @@ namespace MegriaCore.YMM4.WaveOutput
                 return videoInfo;
             }
         }
-        protected OutputOption outputOption;
-        public OutputOption OutputOption
+        protected OutputOptionViewModel outputOption;
+        public OutputOptionViewModel OutputOption
         {
             get
             {
@@ -78,7 +78,7 @@ namespace MegriaCore.YMM4.WaveOutput
             fileStream = null!;
             this.fileWriter = null!;
         }
-        public WaveOutput(string filePath, VideoInfo videoInfo, OutputOption option)
+        public WaveOutput(string filePath, VideoInfo videoInfo, OutputOptionViewModel option)
         {
             this.filePath = filePath;
             this.videoInfo = videoInfo;
@@ -394,30 +394,32 @@ namespace MegriaCore.YMM4.WaveOutput
         /// <param name="filename">保存先のファイルパス。</param>
         /// <param name="sourceProvider">保存する <see cref="IWaveProvider"/> オブジェクト。</param>
         public static void CreateWaveFile<TWave>(string filename, TWave sourceProvider)
-            where TWave : IWaveProvider
+            where TWave : IWaveProvider, allows ref struct
         {
             using NAudio.Wave.WaveFileWriter waveFileWriter = new(filename, sourceProvider.WaveFormat);
 
-            var pool = ArrayPool<byte>.Shared;
-
             int length = sourceProvider.WaveFormat.AverageBytesPerSecond * 4;
-            byte[] array = pool.Rent(length);
+            Buffers.ArrayPoolBuffer<byte> poolBuffer = new(length);
             try
             {
-                while (true)
+                Span<byte> buffer = poolBuffer.Buffer;
+                do
                 {
-                    int num = sourceProvider.Read(array, 0, length);
-                    if (num == 0)
+                    int read = sourceProvider.Read(buffer);
+                    if (read > 0)
+                    {
+                        waveFileWriter.Write(buffer);
+                    }
+                    else
                     {
                         break;
                     }
-
-                    waveFileWriter.Write(array, 0, num);
                 }
+                while (true);
             }
             finally
             {
-                pool.Return(array);
+                poolBuffer.Dispose();
             }
         }
         /// <summary>
@@ -429,33 +431,35 @@ namespace MegriaCore.YMM4.WaveOutput
         /// <param name="filename">保存先のファイルパス。</param>
         /// <param name="sampleProvider">保存する <see cref="ISampleProvider"/> オブジェクト。</param>
         public static void CreateWaveFile<TSample>(string filename, TSample sampleProvider, WaveFormat outputFormat)
-            where TSample : ISampleProvider
+            where TSample : ISampleProvider, allows ref struct
         {
             using NAudio.Wave.WaveFileWriter waveFileWriter = new(filename, outputFormat);
-            ArrayPool<float> pool = ArrayPool<float>.Shared;
-
             int readSize = sampleProvider.WaveFormat.AverageBytesPerSecond * 4;
-            float[] readBuffer = pool.Rent(readSize);
-
+            Buffers.ArrayPoolBuffer<float> poolBuffer = new(readSize);
             try
             {
-                int i;
+                Span<float> buffer = poolBuffer.Buffer;
                 do
                 {
-                    i = sampleProvider.Read(readBuffer, 0, readSize);
-                    if (i == 0)
+                    int read = sampleProvider.Read(buffer);
+                    if (read > 0)
+                    {
+                        waveFileWriter.WriteSamples(poolBuffer.Array, 0, read);
+                    }
+                    else
+                    {
                         break;
-                    waveFileWriter.WriteSamples(readBuffer, 0, i);
+                    }
                 }
                 while (true);
             }
             finally
             {
-                pool.Return(readBuffer);
+                poolBuffer.Dispose();
             }
         }
 
-        private static WaveFormat ToWaveFormat(OutputOption option)
+        private static WaveFormat ToWaveFormat(OutputOptionViewModel option)
         {
             int hertz;
             int bits;

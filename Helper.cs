@@ -27,39 +27,39 @@ namespace MegriaCore.YMM4.WaveOutput
             return ref Unsafe.As<TFrom, TTo>(ref MemoryMarshal.GetArrayDataReference(array));
         }
 
-        internal static void CheckIndex(int sourceLength, int start, int length)
-        {
-            if (System.Environment.Is64BitProcess)
-            {
-                // See comment in Span<T>.Slice for how this works.
-                if ((ulong)(uint)start + (ulong)(uint)length > (ulong)(uint)sourceLength)
-                    throw new ArgumentOutOfRangeException();
-            }
-            else
-            {
-                if ((uint)start > (uint)sourceLength || (uint)length > (uint)(sourceLength - start))
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
+        // internal static void CheckIndex(int sourceLength, int start, int length)
+        // {
+        //     if (System.Environment.Is64BitProcess)
+        //     {
+        //         // See comment in Span<T>.Slice for how this works.
+        //         if ((ulong)(uint)start + (ulong)(uint)length > (ulong)(uint)sourceLength)
+        //             throw new ArgumentOutOfRangeException();
+        //     }
+        //     else
+        //     {
+        //         if ((uint)start > (uint)sourceLength || (uint)length > (uint)(sourceLength - start))
+        //             throw new ArgumentOutOfRangeException();
+        //     }
+        // }
 
-        public static Span<float> ToFloatSpan(byte[] array, int start, int length)
-        {
-            CheckIndex(array.Length, start, length);
-            ref byte _reference = ref Unsafe.AddByteOffset(ref MemoryMarshal.GetArrayDataReference(array), (nint)(uint)start /* force zero-extension */);
-            return MemoryMarshal.CreateSpan(ref Unsafe.As<byte, float>(ref _reference), length >> 2);
-        }
+        // public static Span<float> ToFloatSpan(byte[] array, int start, int length)
+        // {
+        //     CheckIndex(array.Length, start, length);
+        //     ref byte _reference = ref Unsafe.AddByteOffset(ref MemoryMarshal.GetArrayDataReference(array), (nint)(uint)start /* force zero-extension */);
+        //     return MemoryMarshal.CreateSpan(ref Unsafe.As<byte, float>(ref _reference), length >> 2);
+        // }
 
         public static Span<float> ToFloatSpan(Span<byte> span)
         {
             return MemoryMarshal.CreateSpan(ref Unsafe.As<byte, float>(ref MemoryMarshal.GetReference(span)), span.Length >> 2);
         }
 
-        public static Span<byte> ToByteSpan(float[] array, int start, int length)
-        {
-            CheckIndex(array.Length, start, length);
-            ref float _reference = ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(array), (nint)(uint)start /* force zero-extension */);
-            return MemoryMarshal.CreateSpan(ref Unsafe.As<float, byte>(ref _reference), length << 2);
-        }
+        // public static Span<byte> ToByteSpan(float[] array, int start, int length)
+        // {
+        //     CheckIndex(array.Length, start, length);
+        //     ref float _reference = ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(array), (nint)(uint)start /* force zero-extension */);
+        //     return MemoryMarshal.CreateSpan(ref Unsafe.As<float, byte>(ref _reference), length << 2);
+        // }
 
         #region ToVector256
         public static Span<System.Runtime.Intrinsics.Vector256<T>> ToVector256<T>(Span<T> span)

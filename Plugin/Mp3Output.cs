@@ -14,7 +14,7 @@ namespace MegriaCore.YMM4.WaveOutput
     public class Mp3Output : WaveOutput
     {
         public Mp3Output() { }
-        public Mp3Output(string filePath, VideoInfo videoInfo, OutputOption option) : base(filePath, videoInfo, option)
+        public Mp3Output(string filePath, VideoInfo videoInfo, OutputOptionViewModel option) : base(filePath, videoInfo, option)
         {
 
         }
