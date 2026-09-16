@@ -160,33 +160,39 @@ namespace MegriaCore.YMM4.WaveOutput
         /// </summary>
         /// <param name="destination"></param>
         /// <param name="source"></param>
-        private static unsafe void Write24Bit(Span<byte> destination, System.Runtime.Intrinsics.Vector128<int> source)
+        private static void Write24Bit(scoped Span<byte> destination, System.Runtime.Intrinsics.Vector128<int> source)
         {
-            byte* srcPtr = (byte*)&source;
-            fixed (byte* dstPtr = destination)
+            ref byte dst = ref MemoryMarshal.GetReference(destination);
+            ref byte src = ref Unsafe.As<System.Runtime.Intrinsics.Vector128<int>, byte>(ref source);
+            if (BitConverter.IsLittleEndian)
             {
-                if (BitConverter.IsLittleEndian)
-                {
-                    Unsafe.CopyBlockUnaligned(dstPtr, srcPtr, ByteSize);
-                    Unsafe.CopyBlockUnaligned(dstPtr + ByteSize, srcPtr + 4, ByteSize);
-                    Unsafe.CopyBlockUnaligned(dstPtr + ByteSize * 2, srcPtr + 8, ByteSize);
-                    Unsafe.CopyBlockUnaligned(dstPtr + ByteSize * 3, srcPtr + 12, ByteSize);
-                }
-                else
-                {
-                    dstPtr[0] = srcPtr[3];
-                    dstPtr[1] = srcPtr[2];
-                    dstPtr[2] = srcPtr[1];
-                    dstPtr[3] = srcPtr[7];
-                    dstPtr[4] = srcPtr[6];
-                    dstPtr[5] = srcPtr[5];
-                    dstPtr[6] = srcPtr[11];
-                    dstPtr[7] = srcPtr[10];
-                    dstPtr[8] = srcPtr[9];
-                    dstPtr[9] = srcPtr[15];
-                    dstPtr[10] = srcPtr[14];
-                    dstPtr[11] = srcPtr[13];
-                }
+                Unsafe.CopyBlockUnaligned(ref dst, ref src, ByteSize);
+                Unsafe.CopyBlockUnaligned(ref Unsafe.AddByteOffset(ref dst, ByteSize), ref Unsafe.AddByteOffset(ref src, sizeof(int)), ByteSize);
+                Unsafe.CopyBlockUnaligned(ref Unsafe.AddByteOffset(ref dst, ByteSize * 2), ref Unsafe.AddByteOffset(ref src, sizeof(int) * 2), ByteSize);
+                Unsafe.CopyBlockUnaligned(ref Unsafe.AddByteOffset(ref dst, ByteSize * 3), ref Unsafe.AddByteOffset(ref src, sizeof(int) * 3), ByteSize);
+            }
+            else
+            {
+                WriteFromBigEndian(ref src, ref dst);
+            }
+
+            static void WriteFromBigEndian(scoped ref byte src, scoped ref byte dst)
+            {
+                dst = ref Unsafe.AddByteOffset(ref src, 3);
+                Unsafe.AddByteOffset(ref dst, 1) = Unsafe.AddByteOffset(ref src, 2);
+                Unsafe.AddByteOffset(ref dst, 2) = Unsafe.AddByteOffset(ref src, 1);
+
+                Unsafe.AddByteOffset(ref dst, 3) = Unsafe.AddByteOffset(ref src, 7);
+                Unsafe.AddByteOffset(ref dst, 4) = Unsafe.AddByteOffset(ref src, 6);
+                Unsafe.AddByteOffset(ref dst, 5) = Unsafe.AddByteOffset(ref src, 5);
+
+                Unsafe.AddByteOffset(ref dst, 6) = Unsafe.AddByteOffset(ref src, 11);
+                Unsafe.AddByteOffset(ref dst, 7) = Unsafe.AddByteOffset(ref src, 10);
+                Unsafe.AddByteOffset(ref dst, 8) = Unsafe.AddByteOffset(ref src, 9);
+
+                Unsafe.AddByteOffset(ref dst, 9) = Unsafe.AddByteOffset(ref src, 15);
+                Unsafe.AddByteOffset(ref dst, 10) = Unsafe.AddByteOffset(ref src, 14);
+                Unsafe.AddByteOffset(ref dst, 11) = Unsafe.AddByteOffset(ref src, 13);
             }
         }
     }
