@@ -239,51 +239,51 @@ namespace MegriaCore.YMM4.WaveOutput
                 }
             }
         }
-        [Obsolete]
-        private static void Save(NAudio.Wave.IWaveProvider waveProvider, string filePath, WaveFormat outFormat)
-        {
-
-            switch (outFormat.Channels)
-            {
-                case 1:
-                    using (WaveFloatStereoToMonoWaveProvider monoProvider = new(waveProvider))
-                    {
-                        CreateWaveFile(filePath, monoProvider, outFormat);
-                    }
-                    // NAudio.Wave.SampleProviders.WaveToSampleProvider sampleProvider = new(waveProvider);
-                    // WriteSampleToMonaural(sampleProvider, filePath, outFormat);
-                    return;
-                case 2:
-                    break;
-                default:
-                    //「出力フォーマットは無効なチャンネル数です。」
-                    throw new FormatException("Output format has an invalid number of channels.");
-            }
-
-            if (outFormat.Encoding == WaveFormatEncoding.IeeeFloat)
-            {
-                CreateWaveFile(filePath, waveProvider);
-                return;
-            }
-
-            switch (outFormat.BitsPerSample)
-            {
-                case 16:
-                    {
-                        WaveFloatTo16Provider provider = new(waveProvider);
-                        CreateWaveFile(filePath, provider);
-                    }
-                    return;
-                case 24:
-                    {
-                        using WaveFloatTo24Provider provider = new(waveProvider);
-                        CreateWaveFile(filePath, provider);
-                    }
-                    return;
-            }
-            //「出力フォーマットは無効なビット数です。」
-            throw new FormatException("Output format has an invalid number of bits.");
-        }
+        // [Obsolete]
+        // private static void Save(NAudio.Wave.IWaveProvider waveProvider, string filePath, WaveFormat outFormat)
+        // {
+        // 
+        //    switch (outFormat.Channels)
+        //    {
+        //        case 1:
+        //            using (WaveFloatStereoToMonoWaveProvider monoProvider = new(waveProvider))
+        //            {
+        //                CreateWaveFile(filePath, monoProvider, outFormat);
+        //            }
+        //            // NAudio.Wave.SampleProviders.WaveToSampleProvider sampleProvider = new(waveProvider);
+        //            // WriteSampleToMonaural(sampleProvider, filePath, outFormat);
+        //            return;
+        //        case 2:
+        //            break;
+        //        default:
+        //            //「出力フォーマットは無効なチャンネル数です。」
+        //            throw new FormatException("Output format has an invalid number of channels.");
+        //    }
+        // 
+        //    if (outFormat.Encoding == WaveFormatEncoding.IeeeFloat)
+        //    {
+        //        CreateWaveFile(filePath, waveProvider);
+        //        return;
+        //    }
+        // 
+        //    switch (outFormat.BitsPerSample)
+        //    {
+        //        case 16:
+        //            {
+        //                WaveFloatTo16Provider provider = new(waveProvider);
+        //                CreateWaveFile(filePath, provider);
+        //            }
+        //            return;
+        //        case 24:
+        //            {
+        //                using WaveFloatTo24Provider provider = new(waveProvider);
+        //                CreateWaveFile(filePath, provider);
+        //            }
+        //            return;
+        //    }
+        //     //「出力フォーマットは無効なビット数です。」
+        //     throw new FormatException("Output format has an invalid number of bits.");
+        // }
 
         protected virtual void Dispose(bool disposing)
         {
